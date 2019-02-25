@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>QtGuiApplication1Class</class>
- <widget class="QMainWindow" name="QtGuiApplication1Class">
+ <class>XmlAddressParseClass</class>
+ <widget class="QMainWindow" name="XmlAddressParseClass">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QtGuiApplication1</string>
+   <string>XmlAddressParse</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QLineEdit" name="copyEdit">
@@ -49,7 +49,7 @@
       <x>20</x>
       <y>50</y>
       <width>561</width>
-      <height>531</height>
+      <height>521</height>
      </rect>
     </property>
    </widget>
@@ -359,31 +359,31 @@
      <string>Find Additional</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="findHousesButton">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>20</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Find Houses</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="findHousesEdit">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>20</y>
-      <width>113</width>
-      <height>20</height>
+      <y>10</y>
+      <width>221</width>
+      <height>33</height>
      </rect>
     </property>
-    <property name="text">
-     <string>77</string>
-    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLineEdit" name="findHousesEdit">
+       <property name="text">
+        <string>77</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="findHousesButton">
+       <property name="text">
+        <string>Find Houses</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
    <zorder>copyEdit</zorder>
    <zorder>findButton</zorder>
@@ -412,8 +412,7 @@
    <zorder>label_6</zorder>
    <zorder>pushButton</zorder>
    <zorder>resultsBrowser</zorder>
-   <zorder>findHousesButton</zorder>
-   <zorder>findHousesEdit</zorder>
+   <zorder>horizontalLayoutWidget</zorder>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

@@ -1,4 +1,4 @@
-#include "QtGuiApplication1.h"
+#include "XmlAddressParse.h"
 #include <qvalidator.h>
 #include <qfile.h>
 
@@ -29,7 +29,7 @@ struct check_struct {
     }
 };
 
-QtGuiApplication1::QtGuiApplication1(QWidget *parent)
+XmlAddressParse::XmlAddressParse(QWidget *parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
@@ -54,13 +54,13 @@ QtGuiApplication1::QtGuiApplication1(QWidget *parent)
 
 }
 
-void QtGuiApplication1::openXml()
+void XmlAddressParse::openXml()
 {
     m_inputFile = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("data (*.xml)"));
     ui.openEdit->setText(m_inputFile);
 }
 
-int QtGuiApplication1::copyXml()
+int XmlAddressParse::copyXml()
 {
     //QFile* xmlFile = new QFile("check_diff.xml");
     QFile* xmlFile = new QFile(m_inputFile);
@@ -144,7 +144,7 @@ int QtGuiApplication1::copyXml()
     return 0;
 }
 
-int QtGuiApplication1::findXml()
+int XmlAddressParse::findXml()
 {
     //QFile* xmlFile = new QFile("check_diff.xml");
     QFile* xmlFile = new QFile(m_inputFile);
@@ -245,7 +245,7 @@ int QtGuiApplication1::findXml()
     return 0;
 }
 /* Рекурсивный парсинг файла и сохранение структуры документа в XmlStruct */
-void QtGuiApplication1::parseElement(QXmlStreamReader *stream, XmlStruct *currentStruct)
+void XmlAddressParse::parseElement(QXmlStreamReader *stream, XmlStruct *currentStruct)
 {
     currentStruct->name = stream->name().toString();
     currentStruct->attributes = stream->attributes();
@@ -268,7 +268,7 @@ void QtGuiApplication1::parseElement(QXmlStreamReader *stream, XmlStruct *curren
     }
 }
 
-int QtGuiApplication1::saveXmlStruct()
+int XmlAddressParse::saveXmlStruct()
 {
     QFile* xmlFile = new QFile(m_inputFile);
     if (!xmlFile->open(QIODevice::ReadOnly))
@@ -292,7 +292,7 @@ int QtGuiApplication1::saveXmlStruct()
     return 0;
 }
 
-int QtGuiApplication1::findAdd()
+int XmlAddressParse::findAdd()
 {
 	//QFile* xmlFile = new QFile("check_diff.xml");
 	QFile* xmlFile = new QFile(m_inputFile);
@@ -396,7 +396,7 @@ int QtGuiApplication1::findAdd()
 	return 0;
 }
 
-int QtGuiApplication1::findXQuery()
+int XmlAddressParse::findXQuery()
 {
 	QFile* moscowFile = new QFile("Moscow.xml");
 	if (!moscowFile->open(QIODevice::ReadOnly))
@@ -523,6 +523,8 @@ int QtGuiApplication1::findXQuery()
 	//	ui.resultsBrowser->append(str);
 	//}
 	ui.resultsBrowser->append("Done");
+
+    return 0;
 }
 
 //void xquery()
@@ -572,7 +574,7 @@ int QtGuiApplication1::findXQuery()
 	//}
 //}
 
-void  QtGuiApplication1::parseXml()
+void  XmlAddressParse::parseXml()
 {
 	//QtConcurrent::run(this, &QtGuiApplication1::foo);
 	ui.resultsBrowser->append("Wait up to 10 minutes\n");
@@ -594,7 +596,7 @@ void  QtGuiApplication1::parseXml()
 	ui.resultsBrowser->append("\n");
 }
 
-QStringList QtGuiApplication1::foo()
+QStringList XmlAddressParse::foo()
 {
 	//ui.resultsBrowser->append("Wait up to 10 minutes");
 	//QString inp = "77";

@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include <QXmlStreamReader>
-#include "ui_QtGuiApplication1.h"
+#include "ui_XmlAddressParse.h"
 
 struct XmlStruct {
     QString name;
@@ -24,12 +24,12 @@ struct XmlStruct {
     }
 };
 
-class QtGuiApplication1 : public QMainWindow
+class XmlAddressParse : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    QtGuiApplication1(QWidget *parent = Q_NULLPTR);
+    XmlAddressParse(QWidget *parent = Q_NULLPTR);
 
 private slots:
 
@@ -50,5 +50,5 @@ private:
     QString m_inputFile;
     XmlStruct xml_struct;
 
-    Ui::QtGuiApplication1Class ui;
+    Ui::XmlAddressParseClass ui;
 };

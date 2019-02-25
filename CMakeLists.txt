@@ -1,55 +1,32 @@
-cmake_minimum_required(VERSION 2.8.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.1.0)
 
-project(IcdMonitorInterface)
+project(XmlAddressParse)
 
+# Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Instruct CMake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
+
+# Create code from a list of Qt designer ui files
 set(CMAKE_AUTOUIC ON)
 
-if (CMAKE_VERSION VERSION_LESS "3.1")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set (CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
-    endif ()
-else ()
-    set (CMAKE_CXX_STANDARD 11)
-endif ()
 
-find_package(Qt5 COMPONENTS Core Gui Widgets)
+# Find the QtWidgets library
+find_package(Qt5Widgets     CONFIG REQUIRED)
+find_package(Qt5Gui         CONFIG REQUIRED)
+find_package(Qt5Core        CONFIG REQUIRED)
+find_package(Qt5XmlPatterns CONFIG REQUIRED)
 
-set(HEADERS
-    "${PROJECT_SOURCE_DIR}/IcdMonitorInterface.h"
-    "${PROJECT_SOURCE_DIR}/ListUpdateThread.h"
+# Populate a CMake variable with the sources
+set(XmlAddressParse_SRCS
+    XmlAddressParse.ui
+    XmlAddressParse.h
+    XmlAddressParse.cpp
+    main.cpp
 )
 
-set(SOURCES
-    "${PROJECT_SOURCE_DIR}/main.cpp"
-    "${PROJECT_SOURCE_DIR}/IcdMonitorInterface.cpp"
-    "${PROJECT_SOURCE_DIR}/ListUpdateThread.cpp"
-)
+add_executable (${PROJECT_NAME} ${XmlAddressParse_SRCS})
 
-set(FORMS
-    "${PROJECT_SOURCE_DIR}/IcdMonitorInterface.ui"
-)
-
-if(${CMAKE_VERSION} VERSION_LESS 3.0)
-    qt5_wrap_ui(HEADERS ${FORMS})
-endif()
-
-add_executable (${PROJECT_NAME} WIN32 ${HEADERS} ${SOURCES} ${FORMS})
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
-#target_link_libraries(${PROJECT_NAME} CoordTransformLib)
-target_link_libraries(${PROJECT_NAME} IcdLib)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${FOLDER})
-
-install(
-    TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION bin
-    COMPONENT stc_dev
-)
-
-if(WIN32)
-    include(QtAdditional)
-    QtDeploy(TARGET_EXE ${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}.exe DEFAULT_OPTIONS)
-    QtEnvironment()
-endif()
+# Use the Widgets module from Qt 5
+target_link_libraries(XmlAddressParse Qt5::Gui Qt5::Widgets Qt5::Core Qt5::XmlPatterns)
