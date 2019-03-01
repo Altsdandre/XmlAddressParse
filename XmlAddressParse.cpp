@@ -36,6 +36,10 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
 
     QRegExp rx("\\d+");
 
+    m_webView = new QWebEngineView(this);
+    ui.mapScroll->setWidget(m_webView);
+    m_webView->load(QUrl("http://www.yandex.ru"));
+
     QRegExpValidator *validator = new QRegExpValidator(rx);
     ui.copyEdit->setValidator(validator);
 

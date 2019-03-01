@@ -1,8 +1,10 @@
 #pragma once
 
-#include <QtWidgets/QMainWindow>
+#include <QtWidgets>
 #include <QXmlStreamReader>
 #include "ui_XmlAddressParse.h"
+#include <QtWebEngine>
+#include <QWebEngineView>
 
 struct XmlStruct {
     QString name;
@@ -49,6 +51,7 @@ private:
 private:
     QString m_inputFile;
     XmlStruct xml_struct;
+    QWebEngineView *m_webView;
 
     Ui::XmlAddressParseClass ui;
 };

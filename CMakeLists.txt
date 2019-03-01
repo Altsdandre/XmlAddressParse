@@ -17,6 +17,9 @@ find_package(Qt5Widgets     CONFIG REQUIRED)
 find_package(Qt5Gui         CONFIG REQUIRED)
 find_package(Qt5Core        CONFIG REQUIRED)
 find_package(Qt5XmlPatterns CONFIG REQUIRED)
+find_package(Qt5WebEngine      CONFIG REQUIRED)
+find_package(Qt5WebEngineWidgets      CONFIG REQUIRED)
+
 
 # Populate a CMake variable with the sources
 set(XmlAddressParse_SRCS
@@ -29,4 +32,4 @@ set(XmlAddressParse_SRCS
 add_executable (${PROJECT_NAME} ${XmlAddressParse_SRCS})
 
 # Use the Widgets module from Qt 5
-target_link_libraries(XmlAddressParse Qt5::Gui Qt5::Widgets Qt5::Core Qt5::XmlPatterns)
+target_link_libraries(XmlAddressParse Qt5::Gui Qt5::Widgets Qt5::Core Qt5::XmlPatterns Qt5::WebEngine Qt5::WebEngineWidgets)
