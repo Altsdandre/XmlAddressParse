@@ -36,9 +36,21 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
 
     QRegExp rx("\\d+");
 
+    //QString temp_html;
+    //    //QFile linksFile(QDir::currentPath().append("/Include/Program_Files/tenderMainPage2.txt"));
+    //    QFile file("ya_page.html");
+    //    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    //        return;
+
+    //    QByteArray ar = file.readAll();
+        //temp_html = ar.tos
+    //    QWebEnginePage *page = new QWebEnginePage(this);
+    //     page->setHtml(ar);
+
     m_webView = new QWebEngineView(this);
     ui.mapScroll->setWidget(m_webView);
-    m_webView->load(QUrl("http://www.yandex.ru"));
+    //m_webView->load(QUrl("http://www.yandex.ru"));
+    m_webView->load(QUrl::fromLocalFile("/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/ya_page.html"));
 
     QRegExpValidator *validator = new QRegExpValidator(rx);
     ui.copyEdit->setValidator(validator);
@@ -584,12 +596,15 @@ void  XmlAddressParse::parseXml()
 	ui.resultsBrowser->append("Wait up to 10 minutes\n");
 	qApp->processEvents();
 	QStringList results = foo();
+    int i = 0;
 	if (!results.empty()) {
 		results.sort();
 		results.removeDuplicates();
 		for (QString str : results)
 		{
-			ui.resultsBrowser->append(str);
+            QString ss = QString::number(++i);
+            ss = ss + " " + str;
+            ui.resultsBrowser->append(ss);
 			//emit appendIt(str);
 		}
 	}
