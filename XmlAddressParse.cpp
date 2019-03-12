@@ -10,6 +10,7 @@
 #include <QXmlSerializer>
 #include <QSet>
 #include <QMap>
+#include <QTextStream>
 
 struct check_struct {
     QString name;
@@ -49,7 +50,6 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
 
     m_webView = new QWebEngineView(this);
     ui.mapScroll->setWidget(m_webView);
-    //m_webView->load(QUrl("http://www.yandex.ru"));
     m_webView->load(QUrl::fromLocalFile("/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/ya_page.html"));
 
     QRegExpValidator *validator = new QRegExpValidator(rx);
@@ -597,6 +597,16 @@ void  XmlAddressParse::parseXml()
 	qApp->processEvents();
 	QStringList results = foo();
     int i = 0;
+
+    QFile* dataOutFile = new QFile("addresses.txt");
+    if (!dataOutFile->open(QIODevice::WriteOnly))
+    {
+        //QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        ui.resultsBrowser->append("Can not open file!\n");
+        //return -1;
+    }
+    QTextStream stream(dataOutFile);
+    stream << "var addresses = [\n";
 	if (!results.empty()) {
 		results.sort();
 		results.removeDuplicates();
@@ -605,7 +615,9 @@ void  XmlAddressParse::parseXml()
             QString ss = QString::number(++i);
             ss = ss + " " + str;
             ui.resultsBrowser->append(ss);
-			//emit appendIt(str);
+
+
+            stream << "\t'Москва, " + str + "',\n";
 		}
 	}
 	else
@@ -613,6 +625,9 @@ void  XmlAddressParse::parseXml()
 		ui.resultsBrowser->append("No such houses!");
 	}
 	ui.resultsBrowser->append("\n");
+    stream << "];";
+    dataOutFile->close();
+
 }
 
 QStringList XmlAddressParse::foo()
