@@ -57,17 +57,80 @@ function init() {
         //    clusterDisableClickZoom: true
         //});
 
-    //====================================
+    // var reader = new FileReader();
+    // reader.onload = function(event) {
+    //     var contents = event.target.result;
+    //     console.log("Содержимое файла: " + contents);
+    // };
+    //
+    // reader.onerror = function(event) {
+    //     console.error("Файл не может быть прочитан! код " + event.target.error.code);
+    // };
+    // reader.readAsText('addresses.txt');
+    //alert("Data Loaded: ");
+    var addresses = [];
+    $.ajax({
+        url: "addresses.txt"
+    }).done(function(data) {
+        addresses = data.split('\n');
+        //alert("Data Loaded:\n" + addresses);
+        //alert(addresses[1]);
+        //console.log("Data Loaded1: ");
+        //objectManager.add(data);
+        // Ищем координаты указанного адреса
+        for (var j = 0, k = addresses.length; j < k; j++) {
+            //var j = 0;
+            var geocoder = ymaps.geocode(addresses[j]);
+
+            // После того, как поиск вернул результат, вызывается callback-функция
+            geocoder.then(
+                function (res) {
+
+                    // координаты объекта
+                    var coordinates = res.geoObjects.get(0).geometry.getCoordinates();
+
+                    // Добавление метки (Placemark) в коллекцию
+                    addressCollection.add(new ymaps.Placemark( coordinates, {
+                            //hintContent: addresses[j],
+                            //hintContent: j,
+                            //balloonContent: 'baloon'
+                            //balloonContent: addresses[j]
+                        }, {
+                            'preset': 'islands#blueDotIcon'
+                        }
+                    ));
+                }
+            );
+        }
+        myMap.geoObjects.add(addressCollection);
+    });
+    //console.log("Data Loaded2: ");
+    //alert(addresses[1]);
+
+    // var quotes;
+    // $.get("/Users/dmitriy/Projects/QtProjects/XmlAddressParse/build-XmlAddressParse-Desktop_Qt_5_11_0_clang_64bit-Debug/addresses.txt", function(data)) {
+    //      //alert("Data Loaded: " + data);
+    //      //quotes = data.split('\n');
+    //  }
+    // $.get("addresses.txt",
+    // function(data) {
+    //     $('body').append( "Name: " + data.name ) // John
+    //         .append( "Time: " + data.time ); //  2pm
+    // }, "json");
+
+
+
+        //====================================
     // сюда вставлять адреса (скопировать весь файл addresses.txt)
 
-    var addresses = [
-        'Москва, Авиационная ул 77',
-        'Москва, Агропункт мкр 77А',
-        'Москва, Адмирала Лазарева ул 77',
-        'Москва, Академическая Б. ул 77',
-        'Москва, Академическая Б. ул 77А',
-        // 'Москва, Алексеевская ул 77',
-        // 'Москва, Алтуфьевское ш 77',
+     // var addresses = [
+     //    'Москва, Авиационная ул 77',
+     //    'Москва, Агропункт мкр 77А',
+     //    'Москва, Адмирала Лазарева ул 77',
+     //    'Москва, Академическая Б. ул 77',
+     //    'Москва, Академическая Б. ул 77А',
+     //    'Москва, Алексеевская ул 77',
+     //    // 'Москва, Алтуфьевское ш 77',
         // 'Москва, Алтуфьевское ш 77А',
         // 'Москва, Алтуфьевское ш 77Б',
         // 'Москва, Алтуфьевское ш 77Г',
@@ -170,48 +233,48 @@ function init() {
         // 'Москва, Чехова ул 77',
         // 'Москва, Щелковское ш 77',
         // 'Москва, Щелковское ш 77А',
-        'Москва, Щелковское ш 77Б',
-        'Москва, Юго-Восточная ул 77',
-        'Москва, Южнобутовская ул 77',
-        'Москва, Юности ул 77',
-        'Москва, Юных Ленинцев ул 77'
-    ];
+    //     'Москва, Щелковское ш 77Б',
+    //     'Москва, Юго-Восточная ул 77',
+    //     'Москва, Южнобутовская ул 77',
+    //     'Москва, Юности ул 77',
+    //     'Москва, Юных Ленинцев ул 77'
+    // ];
     //====================================
 
-    // Ищем координаты указанного адреса
-    for (var j = 0, k = addresses.length; j < k; j++) {
-        //var j = 0;
-        var geocoder = ymaps.geocode(addresses[j]);
-
-        // После того, как поиск вернул результат, вызывается callback-функция
-        geocoder.then(
-            function (res) {
-
-                // координаты объекта
-                var coordinates = res.geoObjects.get(0).geometry.getCoordinates();
-
-                // Добавление метки (Placemark) в коллекцию
-                addressCollection.add(new ymaps.Placemark( coordinates, {
-                        //hintContent: addresses[j],
-                        //hintContent: j,
-                        //balloonContent: 'baloon'
-                        //balloonContent: addresses[j]
-                    }, {
-                        'preset': 'islands#blueDotIcon'
-                    }
-                ));
-            }
-        );
-    }
-    for (var q = 0, w = addresses.length; q < w; q++) {
-        addressCollection.item(q).properties.set('balloonContent', 'dfgdfg');
-    }
-    // Чтобы задать опции одиночным объектам и кластерам,
-    // обратимся к дочерним коллекциям ObjectManager.
-    //objectManager.objects.options.set('preset', 'islands#greenDotIcon');
-    //objectManager.clusters.options.set('preset', 'islands#greenClusterIcons');
-    //myMap.geoObjects.add(objectManager);
-
-    myMap.geoObjects.add(addressCollection);
+    // // Ищем координаты указанного адреса
+    // for (var j = 0, k = addresses.length; j < k; j++) {
+    //     //var j = 0;
+    //     var geocoder = ymaps.geocode(addresses[j]);
+    //
+    //     // После того, как поиск вернул результат, вызывается callback-функция
+    //     geocoder.then(
+    //         function (res) {
+    //
+    //             // координаты объекта
+    //             var coordinates = res.geoObjects.get(0).geometry.getCoordinates();
+    //
+    //             // Добавление метки (Placemark) в коллекцию
+    //             addressCollection.add(new ymaps.Placemark( coordinates, {
+    //                     //hintContent: addresses[j],
+    //                     //hintContent: j,
+    //                     //balloonContent: 'baloon'
+    //                     //balloonContent: addresses[j]
+    //                 }, {
+    //                     'preset': 'islands#blueDotIcon'
+    //                 }
+    //             ));
+    //         }
+    //     );
+    // }
+    // // for (var q = 0, w = addresses.length; q < w; q++) {
+    // //     addressCollection.item(q).properties.set('balloonContent', 'dfgdfg');
+    // // }
+    // // // Чтобы задать опции одиночным объектам и кластерам,
+    // // обратимся к дочерним коллекциям ObjectManager.
+    // //objectManager.objects.options.set('preset', 'islands#greenDotIcon');
+    // //objectManager.clusters.options.set('preset', 'islands#greenClusterIcons');
+    // //myMap.geoObjects.add(objectManager);
+    //
+    // myMap.geoObjects.add(addressCollection);
 
 }

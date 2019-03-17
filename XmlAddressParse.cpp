@@ -30,6 +30,8 @@ struct check_struct {
     }
 };
 
+const QString rootPath = "/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/";
+
 XmlAddressParse::XmlAddressParse(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -50,7 +52,7 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
 
     m_webView = new QWebEngineView(this);
     ui.mapScroll->setWidget(m_webView);
-    m_webView->load(QUrl::fromLocalFile("/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/ya_page.html"));
+    m_webView->load(QUrl::fromLocalFile(rootPath + "ya_page.html"));
 
     QRegExpValidator *validator = new QRegExpValidator(rx);
     ui.copyEdit->setValidator(validator);
@@ -598,7 +600,7 @@ void  XmlAddressParse::parseXml()
 	QStringList results = foo();
     int i = 0;
 
-    QFile* dataOutFile = new QFile("addresses.txt");
+    QFile* dataOutFile = new QFile(rootPath + "addresses.txt");
     if (!dataOutFile->open(QIODevice::WriteOnly))
     {
         //QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
@@ -606,7 +608,6 @@ void  XmlAddressParse::parseXml()
         //return -1;
     }
     QTextStream stream(dataOutFile);
-    stream << "var addresses = [\n";
 	if (!results.empty()) {
 		results.sort();
 		results.removeDuplicates();
@@ -617,7 +618,7 @@ void  XmlAddressParse::parseXml()
             ui.resultsBrowser->append(ss);
 
 
-            stream << "\t'Москва, " + str + "',\n";
+            stream << "'Москва, " + str + "'\n";
 		}
 	}
 	else
@@ -625,8 +626,11 @@ void  XmlAddressParse::parseXml()
 		ui.resultsBrowser->append("No such houses!");
 	}
 	ui.resultsBrowser->append("\n");
-    stream << "];";
     dataOutFile->close();
+
+    if (!results.empty()) {
+        m_webView->reload();
+    }
 
 }
 
