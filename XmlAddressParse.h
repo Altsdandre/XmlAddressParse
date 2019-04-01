@@ -43,6 +43,8 @@ private slots:
     int  saveXmlStruct();
 
 	void  parseXml();
+
+    void makeShortHousesAtPostal();
     
 private:
     void parseElement(QXmlStreamReader *stream, XmlStruct *currentStruct);

@@ -34,17 +34,31 @@ function init() {
             ]
         }),
 
-        addressCollection = new ymaps.GeoObjectCollection(null, {});
+        addressCollection = new ymaps.GeoObjectCollection(null, {}),
 
-        //objectManager = new ymaps.ObjectManager({
-        //    // Чтобы метки начали кластеризоваться, выставляем опцию.
-        //    clusterize: true,
-            // ObjectManager принимает те же опции, что и кластеризатор.
-        //    gridSize: 32,
-        //    clusterDisableClickZoom: true
-        //});
-
-    var addresses = [];
+        clusterer = new ymaps.Clusterer({
+            /**
+             * Через кластеризатор можно указать только стили кластеров,
+             * стили для меток нужно назначать каждой метке отдельно.
+             * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/option.presetStorage.xml
+             */
+            //preset: 'islands#invertedVioletClusterIcons',
+            /**
+             * Ставим true, если хотим кластеризовать только точки с одинаковыми координатами.
+             */
+            groupByCoordinates: false
+            /**
+             * Опции кластеров указываем в кластеризаторе с префиксом "cluster".
+             * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/ClusterPlacemark.xml
+             */
+            //clusterDisableClickZoom: true,
+            //clusterHideIconOnBalloonOpen: false,
+            //geoObjectHideIconOnBalloonOpen: false
+        }),
+        ind = 0;
+        addresses = [],
+        marks = [];
+    
     $.ajax({
         url: "addresses.txt"
     }).done(function(data) {
@@ -59,26 +73,44 @@ function init() {
             var geocoder = ymaps.geocode(addresses[j]);
 
             // После того, как поиск вернул результат, вызывается callback-функция
-            geocoder.then(
-                function (res) {
-                    // координаты объекта
-                    var coordinates = res.geoObjects.get(0).geometry.getCoordinates();
+                geocoder.then(
+                    function (res) {
+                        // координаты объекта
+                        var coordinates = res.geoObjects.get(0).geometry.getCoordinates();
 
-                    // Добавление метки (Placemark) в коллекцию
-                    addressCollection.add(new ymaps.Placemark(coordinates, {
-                            hintContent: addresses[addressIndex()],
-                            balloonContent: addresses[addressIndex()]
-                        }, {
-                            'preset': 'islands#blueDotIcon'
-                        }
-                    ));
-                }
-            )
+                        marks[addressIndex()] = new ymaps.Placemark(coordinates, {
+                                hintContent: addresses[addressIndex()],
+                                balloonContent: addresses[addressIndex()]
+                            }, {
+                                'preset': 'islands#blueDotIcon'
+                            }
+                        );
+                        // Добавление метки (Placemark) в коллекцию
+                        addressCollection.add(marks[addressIndex()]);
+                        clusterer.add(marks[addressIndex()]);
+                        ind = ind + 1;
+                        // if (ind == addresses.length - 1) alert(marks.length);
+                         if (ind == 500) alert("500");
+                        // if (ind == 600) alert("600");
+                         if (ind == 700) alert("700");
+                        // if (ind == 800) alert("800");
+                        // if (ind == 1000) alert("1000");
+                    },
+                    function (err) {
+                        // Обработка ошибки.
+                        alert(err);
+                    }
+                );
 
         })(j);
 
+        myMap.geoObjects.add(clusterer);
 
-        myMap.geoObjects.add(addressCollection);
+        myMap.setBounds(clusterer.getBounds(), {
+            checkZoomRange: true
+        });
+
+        //myMap.geoObjects.add(addressCollection);
     });
 
 }

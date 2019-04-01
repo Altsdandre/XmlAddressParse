@@ -64,7 +64,8 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
     connect(ui.findButton, SIGNAL(clicked()), this, SLOT(findXml()));
     connect(ui.saveStructButton, SIGNAL(clicked()), this, SLOT(saveXmlStruct()));
 	//connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(findAdd()));
-	connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(findXQuery()));
+    //connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(findXQuery()));
+    connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(makeShortHousesAtPostal()));
 
 	connect(ui.findHousesButton, SIGNAL(clicked()), this, SLOT(parseXml()));
 
@@ -416,7 +417,7 @@ int XmlAddressParse::findAdd()
 
 int XmlAddressParse::findXQuery()
 {
-	QFile* moscowFile = new QFile("Moscow.xml");
+    QFile* moscowFile = new QFile(rootPath + "Moscow.xml");
 	if (!moscowFile->open(QIODevice::ReadOnly))
 	{
 		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
@@ -424,6 +425,133 @@ int XmlAddressParse::findXQuery()
 	}
 
 	QXmlStreamReader xml(moscowFile);
+//==============================================================================================
+    QFile* mySocrFile = new QFile(rootPath + "shortNames.txt");
+    if (!mySocrFile->open(QIODevice::ReadOnly))
+    {
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        return -1;
+    }
+    QSet<QString> mySosr;
+    QTextStream in(mySocrFile);
+    while (!in.atEnd()) {
+        mySosr.insert(in.readLine());
+    }
+    mySocrFile->close();
+    //создать новый москоу.иксмл
+    QFile* moscowNew = new QFile(rootPath + "MoscowNew.xml");
+    if (!moscowNew->open(QIODevice::WriteOnly))
+    {
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        return -1;
+    }
+    //xml.setDevice(xmlFile);
+    QXmlStreamWriter moscowNewXml(moscowNew);
+    moscowNewXml.setAutoFormatting(true);
+    QSet<QString> objects_id_new;
+    //заполнение QSet. парсинг Moscow.xml.
+    bool has2 = false;
+
+    while (!xml.atEnd() && !xml.hasError())
+    {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if (xml.error() != QXmlStreamReader::NoError) {
+            qDebug() << xml.error() << "   " << xml.errorString();
+        }
+        switch (token)
+        {
+        case QXmlStreamReader::StartDocument:
+            moscowNewXml.writeStartDocument();
+            break;
+        case QXmlStreamReader::EndDocument:
+            moscowNewXml.writeEndDocument();
+            break;
+        case QXmlStreamReader::StartElement:
+            if (xml.name() == "Object")
+            {
+                if (xml.attributes().hasAttribute("AOGUID"))
+                {
+                    if (mySosr.contains(xml.attributes().value("SHORTNAME").toString())) {
+                        objects_id_new.insert(xml.attributes().value("AOGUID").toString());
+                    }
+                }
+            }
+            if (xml.name() == "Object")
+            {
+                if (xml.attributes().hasAttribute("AOGUID")) {
+                    if (mySosr.contains(xml.attributes().value("SHORTNAME").toString()))
+                    {
+                        moscowNewXml.writeStartElement(xml.name().toString());
+                        moscowNewXml.writeAttributes(xml.attributes());
+                        has2 = true;
+                    }
+                    else
+                    {
+                        has2 = false;
+                    }
+                }
+            }
+            break;
+        case QXmlStreamReader::EndElement:
+            if (has2)
+            {
+                moscowNewXml.writeEndElement();
+            }
+            break;
+        case QXmlStreamReader::Characters:
+            moscowNewXml.writeCharacters(xml.text().toString());
+            break;
+        default:
+            break;
+        }
+    }
+
+
+
+    moscowFile->close();
+    moscowNew->close();
+
+
+
+    //создать новый хоусез.иксмл
+
+//==============================================================================================
+    QSet<QString> shortNames;
+    //заполнение QSet. парсинг Moscow.xml.
+    while (!xml.atEnd() && !xml.hasError())
+    {
+        if (xml.readNext() == QXmlStreamReader::StartElement)
+        {
+            if (xml.name() == "Object")
+            {
+                if (xml.attributes().hasAttribute("SHORTNAME"))
+                {
+                    shortNames.insert(xml.attributes().value("SHORTNAME").toString());
+                }
+            }
+        }
+        if (xml.error() != QXmlStreamReader::NoError)
+        {
+            qDebug() << xml.error() << "   " << xml.errorString();
+        }
+
+    }
+    QFile* dataOutFile = new QFile(rootPath + "shortNames.txt");
+    if (!dataOutFile->open(QIODevice::WriteOnly))
+    {
+        //QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        ui.resultsBrowser->append("Can not open file!\n");
+        //return -1;
+    }
+    QList<QString> nameslist = shortNames.toList();
+    qSort(nameslist.begin(), nameslist.end());
+    QTextStream stream(dataOutFile);
+
+    for (QString str : nameslist) {
+        stream << str + "\n";
+    }
+    dataOutFile->close();
+//==============================================================================================
 	QSet<QString> objects_id;
 	//заполнение QSet. парсинг Moscow.xml.
 	while (!xml.atEnd() && !xml.hasError())
@@ -672,7 +800,7 @@ QStringList XmlAddressParse::foo()
 	bool res7 = rx.exactMatch(s6.first());
 
 
-	QFile* xmlFile = new QFile("Moscow.xml");
+    QFile* xmlFile = new QFile(rootPath + "Moscow.xml");
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
 		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
@@ -696,7 +824,8 @@ QStringList XmlAddressParse::foo()
 	xmlFile->close();
 
 	//xmlFile = new QFile("houses_small.xml");
-	xmlFile = new QFile("houses.xml");
+    //xmlFile = new QFile("houses.xml");
+    xmlFile = new QFile(rootPath + "PostalHouses.xml");
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
 		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
@@ -720,4 +849,119 @@ QStringList XmlAddressParse::foo()
 	}
 	xmlFile->close();
 	return houses;
+}
+
+void XmlAddressParse::makeShortHousesAtPostal()
+{
+    QSet<int> postalCodes;
+    postalCodes << /* СВАО */
+                   129164 << 129301 << 129366 << 129626 <<              /* Алексеевский */
+                   127349 << 127543 << 127549 << 127560 <<              /* Бибирево */
+                   129281 << 129336 << 129345 << 129346 <<              /* Лосиноостровский */
+                   127224 << 127282 <<                                  /* Медведково Северное */
+                   127273 << 127490 << 127562 << 127566 <<              /* Отрадное */
+                   127204 << 127495 <<                                  /* Северный */
+                   127410 <<                                            /* Алтуфьево */
+                   127254 << 127322 <<                                  /* Бутырский */
+                   127106 << 127276 << 127427 <<                        /* Марьино */
+                   127081 << 127221 << 127642 <<                        /* Медведково Южное */
+                   129128 << 129226 <<                                  /* Ростокино */
+                   129337 << 129338 << 129347 <<                        /* Ярославский */
+                   129327 << 129344 <<                                  /* Бабушкинский */
+                   127253 << 127572 << 127576 <<                        /* Лианозово */
+                   127018 << 127521 << 129594 <<                        /* Марьина Роща */
+                   129075 << 129085 << 129223 << 129515 <<              /* Останкинский */
+                   129323 << 129329 << 129343 <<                        /* Свиблово */
+                   /* ЦАО */
+                   123001 << 123022 << 123056 << 123100 <<              /* Пресненский */
+                   123104 << 123242 << 123290 << 123317 << 123557 <<    /* Пресненский */
+                   109012 << 109240 << 125009 << 125047 <<              /* Тверской */
+                   127006 << 127030 << 127051 << 127055 << 127473 <<    /* Тверской */
+                   107031 << 129090 << 129110 << 129272 <<              /* Мещанский */
+                   107045 << 107078 << 107140 <<                        /* Красносельский */
+                   101000 << 105005 << 105062 <<                        /* Басманный */
+                   105064 << 105066 << 105082 << 105094 <<              /* Басманный */
+                   /* САО */
+                   125040 << 125124 << 125284 << 127137 <<              /* Беговой */
+                   127015 << 127220 << 127287 <<                        /* Савеловский */
+                   127206 << 127238 << 127422 << 127434 << 127550 <<    /* Тимирязевский */
+                   125008 << 125183 << 125239 << 125299 <<              /* Коптево */
+                   125413 << 125438 << 125493 << 125499 << 125565 <<    /* Головинский */
+                   125414 << 125475 << 125502 << 125581 <<              /* Ховрино */
+                   125195 << 125445 <<                                  /* Левобережный */
+                   125412 << 125599 << 125635 <<                        /* Западное дегунино */
+                   125237 << 125540 << 125591 <<                        /* Восточное Дегунино */
+                   127411 << 127644 <<                                  /* Дмитровский */
+                   127247 << 127474 << 127486 <<                        /* Бескудниковский */
+                   /* ВАО */
+                   107014 << 107113 <<                                  /* Сокольники */
+                   107150 << 107258 << 107370 << 107564 <<              /* Богородское */
+                   107143 <<                                            /* Метрогородок */
+                   107023 << 107061 << 107076 << 107362 << 107553 <<    /* Преображенское */
+                   107065 << 107207 << 107241 << 107497 << 107589;      /* Гольяново */
+
+    QFile* xmlFile = new QFile(rootPath + "houses.xml");
+    if (!xmlFile->open(QIODevice::ReadOnly))
+    {
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+    }
+    QFile* xmlOutFile = new QFile(rootPath + "PostalHouses.xml");
+    if (!xmlOutFile->open(QIODevice::WriteOnly))
+    {
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+    }
+    QXmlStreamReader xml(xmlFile);
+
+    QXmlStreamWriter xmlOut(xmlOutFile);
+    xmlOut.setAutoFormatting(true);
+
+    bool has = false;
+
+    while (!xml.atEnd() && !xml.hasError())
+    {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if (xml.error() != QXmlStreamReader::NoError) {
+            qDebug() << xml.error() << "   " << xml.errorString();
+        }
+        switch (token)
+        {
+        case QXmlStreamReader::StartDocument:
+            xmlOut.writeStartDocument();
+            break;
+        case QXmlStreamReader::EndDocument:
+            xmlOut.writeEndDocument();
+            break;
+        case QXmlStreamReader::StartElement:
+            if (xml.name() == "House")
+            {
+                if (xml.attributes().hasAttribute("POSTALCODE")) {
+                    if (postalCodes.contains(xml.attributes().value("POSTALCODE").toInt()))
+                    {
+                        xmlOut.writeStartElement(xml.name().toString());
+                        xmlOut.writeAttributes(xml.attributes());
+                        has = true;
+                    }
+                    else
+                    {
+                        has = false;
+                    }
+                }
+            }
+            break;
+        case QXmlStreamReader::EndElement:
+            if (has)
+            {
+                xmlOut.writeEndElement();
+            }
+            break;
+        case QXmlStreamReader::Characters:
+            xmlOut.writeCharacters(xml.text().toString());
+            break;
+        default:
+            break;
+        }
+    }
+
+    xmlFile->close();
+    xmlOutFile->close();
 }
