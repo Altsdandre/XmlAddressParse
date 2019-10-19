@@ -6,7 +6,7 @@ function init() {
     var myMap = new ymaps.Map("map", {
             // Координаты центра карты.
             // Порядок по умолчнию: «широта, долгота».
-            center: [55.76, 37.64],
+            center: [59.94, 30.32],
             // Уровень масштабирования. Допустимые значения:
             // от 0 (весь мир) до 19.
             zoom: 10,
@@ -58,7 +58,7 @@ function init() {
         ind = 0;
         addresses = [],
         marks = [];
-    
+
     $.ajax({
         url: "addresses.txt"
     }).done(function(data) {

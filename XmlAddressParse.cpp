@@ -12,65 +12,28 @@
 #include <QMap>
 #include <QTextStream>
 
-struct check_struct {
-    QString name;
-    QString action;
-    QString temp_delay;
-
-    check_struct()
-    {
-        clear();
-    }
-
-    void clear()
-    {
-        name.clear();
-        action.clear();
-        temp_delay.clear();
-    }
-};
-
-const QString rootPath = "/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/";
+//const QString rootPath = "/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/";
+QString rootPath;
 
 XmlAddressParse::XmlAddressParse(QWidget *parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
 
-    QRegExp rx("\\d+");
-
-    //QString temp_html;
-    //    //QFile linksFile(QDir::currentPath().append("/Include/Program_Files/tenderMainPage2.txt"));
-    //    QFile file("ya_page.html");
-    //    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    //        return;
-
-    //    QByteArray ar = file.readAll();
-        //temp_html = ar.tos
-    //    QWebEnginePage *page = new QWebEnginePage(this);
-    //     page->setHtml(ar);
+    rootPath = QCoreApplication::applicationDirPath() + "/";
 
     m_webView = new QWebEngineView(this);
     ui.mapScroll->setWidget(m_webView);
     m_webView->load(QUrl::fromLocalFile(rootPath + "ya_page.html"));
 
-    QRegExpValidator *validator = new QRegExpValidator(rx);
-    ui.copyEdit->setValidator(validator);
-
     m_inputFile = ui.openEdit->text();
 
     connect(ui.openButton, SIGNAL(clicked()), this, SLOT(openXml()));
-    connect(ui.copyButton, SIGNAL(clicked()), this, SLOT(copyXml()));
-    connect(ui.findButton, SIGNAL(clicked()), this, SLOT(findXml()));
-    connect(ui.saveStructButton, SIGNAL(clicked()), this, SLOT(saveXmlStruct()));
 	//connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(findAdd()));
     //connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(findXQuery()));
     connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(makeShortHousesAtPostal()));
 
 	connect(ui.findHousesButton, SIGNAL(clicked()), this, SLOT(parseXml()));
-
-    xml_struct.clear();
-
 }
 
 void XmlAddressParse::openXml()
@@ -79,242 +42,9 @@ void XmlAddressParse::openXml()
     ui.openEdit->setText(m_inputFile);
 }
 
-int XmlAddressParse::copyXml()
-{
-    //QFile* xmlFile = new QFile("check_diff.xml");
-    QFile* xmlFile = new QFile(m_inputFile);
-    if (!xmlFile->open(QIODevice::ReadOnly))
-    {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-        return -1;
-    }
-
-    QXmlStreamReader xml(xmlFile);
-
-    QFile* xmlOutFile = new QFile("Out.xml");
-    if (!xmlOutFile->open(QIODevice::WriteOnly))
-    {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-        return -1;
-    }
-
-    QXmlStreamWriter xmlOut(xmlOutFile);
-    xmlOut.setAutoFormatting(true);
-
-    int i = 0;
-    bool stop = false;
-
-    while (!xml.atEnd() && !xml.hasError() && i < ui.copyEdit->text().toInt() && !stop)
-    {
-        QXmlStreamReader::TokenType token = xml.readNext();
-        ++i;
-        if (xml.error() != QXmlStreamReader::NoError) {
-            qDebug() << xml.error() << "   " << xml.errorString();
-        }
-
-        switch (token)
-        {
-        case QXmlStreamReader::NoToken:
-            break;
-        case QXmlStreamReader::Invalid:
-            break;
-        case QXmlStreamReader::StartDocument:
-            xmlOut.writeStartDocument();
-            break;
-        case QXmlStreamReader::EndDocument:
-            xmlOut.writeEndDocument();
-            break;
-        case QXmlStreamReader::StartElement:
-            if (xml.name() == ui.elementEdit->text() &&
-                xml.attributes().hasAttribute(ui.attributeEdit->text()) &&
-                xml.attributes().value(ui.attributeEdit->text()) == ui.valueEdit->text())
-            {
-                stop = true;
-                break;
-            }
-            xmlOut.writeStartElement(xml.name().toString());
-            xmlOut.writeAttributes(xml.attributes());
-            break;
-        case QXmlStreamReader::EndElement:
-            xmlOut.writeEndElement();
-            break;
-        case QXmlStreamReader::Characters:
-            xmlOut.writeCharacters(xml.text().toString());
-            break;
-        case QXmlStreamReader::Comment:
-            break;
-        case QXmlStreamReader::DTD:
-            break;
-        case QXmlStreamReader::EntityReference:
-            break;
-        case QXmlStreamReader::ProcessingInstruction:
-            break;
-        default:
-            break;
-        }
-    }
-
-    ui.copyEdit->setText(QString::number(i));
-    xmlFile->close();
-    xmlOutFile->close();
-
-    ui.resultsBrowser->append("Copy Done\n");
-
-    return 0;
-}
-
-int XmlAddressParse::findXml()
-{
-    //QFile* xmlFile = new QFile("check_diff.xml");
-    QFile* xmlFile = new QFile(m_inputFile);
-    if (!xmlFile->open(QIODevice::ReadOnly))
-    {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-        return -1;
-    }
-
-    QXmlStreamReader xml(xmlFile);
-
-    bool stop = false;
-    check_struct whole_struct[100];
-    int k = 0;
-
-    while (!xml.atEnd() && !xml.hasError())
-    {
-        QXmlStreamReader::TokenType token = xml.readNext();
-        if (xml.error() != QXmlStreamReader::NoError) {
-            qDebug() << xml.error() << "   " << xml.errorString();
-        }
-        switch (token)
-        {
-        case QXmlStreamReader::NoToken:
-            break;
-        case QXmlStreamReader::Invalid:
-            break;
-        case QXmlStreamReader::StartDocument:  
-            break;
-        case QXmlStreamReader::EndDocument:
-            break;
-        case QXmlStreamReader::StartElement:
-            if (xml.name() == ui.highEdit->text())
-            {
-                xml.readNext();
-                while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == ui.highEdit->text()))
-                {
-                    if (xml.tokenType() == QXmlStreamReader::StartElement && xml.name() == ui.mid1Edit->text())
-                    {
-                        xml.readNext();
-                        if (xml.tokenType() == QXmlStreamReader::Characters)
-                        {
-                            whole_struct[k].name = xml.text().toString();
-                        }
-                    }
-                    if (xml.tokenType() == QXmlStreamReader::StartElement && xml.name() == ui.mid2Edit->text())
-                    {
-                        xml.readNext();
-                        if (xml.tokenType() == QXmlStreamReader::Characters)
-                        {
-                            whole_struct[k].action = xml.text().toString();
-                        }
-                    }
-                    if (xml.tokenType() == QXmlStreamReader::StartElement && xml.name() == ui.mid3Edit->text())
-                    {
-                        xml.readNext();
-                        if (xml.tokenType() == QXmlStreamReader::Characters)
-                        {
-                            whole_struct[k].temp_delay = xml.text().toString();
-                        }
-                    }
-                    xml.readNext();
-                }
-                if (whole_struct[k].temp_delay != ui.valEdit->text())
-                {
-                    whole_struct[k].clear();
-                    --k;
-                }
-                ++k;
-            }
-            break;
-        case QXmlStreamReader::EndElement:
-            break;
-        case QXmlStreamReader::Characters:
-            break;
-        case QXmlStreamReader::Comment:
-            break;
-        case QXmlStreamReader::DTD:
-            break;
-        case QXmlStreamReader::EntityReference:
-            break;
-        case QXmlStreamReader::ProcessingInstruction:
-            break;
-        default:
-            break;
-        }
-        
-    }
-    for (int j = 0; j < k; ++j)
-    {
-        ui.resultsBrowser->append(whole_struct[j].name + "  " + whole_struct[j].action + "  " + whole_struct[j].temp_delay);
-    }
-
-    xmlFile->close();
-
-    ui.resultsBrowser->append("\n");
-
-    return 0;
-}
-/* Рекурсивный парсинг файла и сохранение структуры документа в XmlStruct */
-void XmlAddressParse::parseElement(QXmlStreamReader *stream, XmlStruct *currentStruct)
-{
-    currentStruct->name = stream->name().toString();
-    currentStruct->attributes = stream->attributes();
-    int currentNum = 0;
-    stream->readNext();
-    while (!(stream->tokenType() == QXmlStreamReader::EndElement && stream->name() == currentStruct->name))
-    {
-        if (stream->tokenType() == QXmlStreamReader::Characters)
-        {
-            currentStruct->text = stream->text().toString();
-            stream->readNext();
-            continue;
-        }
-        else if (stream->tokenType() == QXmlStreamReader::StartElement)
-        {
-            currentStruct->elements.push_back(XmlStruct());
-            parseElement(stream, &currentStruct->elements[currentNum++]);
-        }
-        stream->readNext();
-    }
-}
-
-int XmlAddressParse::saveXmlStruct()
-{
-    QFile* xmlFile = new QFile(m_inputFile);
-    if (!xmlFile->open(QIODevice::ReadOnly))
-    {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-        return -1;
-    }
-
-    QXmlStreamReader *xml = new QXmlStreamReader(xmlFile);
-    while (!xml->atEnd() && !xml->hasError())
-    {
-        QXmlStreamReader::TokenType token = xml->readNext();
-        if (token == QXmlStreamReader::StartElement)
-        {
-            parseElement(xml, &xml_struct);
-        }
-    }
-    xmlFile->close();
-    ui.resultsBrowser->append("Struct Save\n");
-
-    return 0;
-}
-
 int XmlAddressParse::findAdd()
 {
-	//QFile* xmlFile = new QFile("check_diff.xml");
-	QFile* xmlFile = new QFile(m_inputFile);
+    QFile* xmlFile = new QFile(m_inputFile);
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
 		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
@@ -323,7 +53,8 @@ int XmlAddressParse::findAdd()
 
 	QXmlStreamReader xml(xmlFile);
 
-	QFile* xmlOutFile = new QFile("Out.xml");
+    QString outFileName = _objectName + "s_" + m_regionCode;
+    QFile* xmlOutFile = new QFile(outFileName + ".xml");
 	if (!xmlOutFile->open(QIODevice::WriteOnly))
 	{
 		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
@@ -333,9 +64,6 @@ int XmlAddressParse::findAdd()
 	QXmlStreamWriter xmlOut(xmlOutFile);
 	xmlOut.setAutoFormatting(true);
 
-	bool stop = false;
-	check_struct whole_struct[100];
-	int k = 0;
 	bool has = false;
 	unsigned int counter = 0;
 
@@ -354,43 +82,33 @@ int XmlAddressParse::findAdd()
 			xmlOut.writeEndDocument();
 			break;
 		case QXmlStreamReader::StartElement:
-			//if (xml.name() == "Object")
-			//{
-			//	QXmlStreamAttributes attr = xml.attributes();
-			//	if (xml.attributes().value("REGIONCODE") == "77")
-			//	{
-			//		xmlOut.writeStartElement(xml.name().toString());
-			//		xmlOut.writeAttributes(xml.attributes());
-			//		has = true;
-			//	}
-			//	else
-			//	{
-			//		has = false;
-			//	}
-			//}
 
-			if (xml.name() == "House")
+/*========================= Эти изменения стоит проверить внимательнее ======================================*/
+
+            if (xml.name() == m_objectName)
 			{
-				QXmlStreamAttributes attr = xml.attributes();
-				if (xml.attributes().value("REGIONCODE") == "77")
+                if (xml.attributes().value("REGIONCODE") == m_regionCode)
 				{
 					xmlOut.writeStartElement(xml.name().toString());
 					xmlOut.writeAttributes(xml.attributes());
 					has = true;
-					++counter;
+                    if (m_objectName == "House")
+                        ++counter;
 				}
 				else
 				{
 					has = false;
 				}
-				
-				if (counter >= 300000)
-				{
-					xmlOutFile->close();
-					xmlOutFile = new QFile("Out2.xml");
-				}
+                if (m_objectName == "House") {
+                    if (counter >= 300000) {
+                        static i = 1;
+                        xmlOutFile->close();
+                        xmlOutFile = new QFile(outFileName + "_" + QString::number(++i) + ".xml");
+                    }
+                }
 
 			}
+/*========================= ************************ ====================================================*/
 
 			break;
 		case QXmlStreamReader::EndElement:
@@ -506,12 +224,8 @@ int XmlAddressParse::findXQuery()
         }
     }
 
-
-
     moscowFile->close();
     moscowNew->close();
-
-
 
     //создать новый хоусез.иксмл
 
@@ -640,86 +354,13 @@ int XmlAddressParse::findXQuery()
 		}
 	}
 
-	//while (!xml.atEnd() && !xml.hasError())
-	//{
-	//	if (xml.readNext() == QXmlStreamReader::StartElement)
-	//	{
-	//		if (xml.name() == "House")
-	//		{
-	//			if (xml.attributes().value("HOUSENUM") == "7")
-	//			{
-	//				//strOutput += xml.attributes().value("HOUSEID");
-	//				//strOutput += ";";
-	//			}
-	//		}
-	//	}
-	//	if (xml.error() != QXmlStreamReader::NoError)
-	//	{
-	//		qDebug() << xml.error() << "   " << xml.errorString();
-	//	}
-	//
-	//}
-	/*-----------------------------------------------------------------*/
-
 	xmlFile->close();
 	xmlOutFile->close();
 
-	//QStringList strlist = strOutput.split(";");
-	//for (QString str : strlist) {
-	//	ui.resultsBrowser->append(str);
-	//}
-	ui.resultsBrowser->append("Done");
+    ui.resultsBrowser->append("Done");
 
     return 0;
 }
-
-//void xquery()
-//{
-	//QFile* xmlFile = new QFile("Out.xml");
-	//if (!xmlFile->open(QIODevice::ReadOnly))
-	//{
-	//	QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-	//	return -1;
-	//}
-	//
-	/*----------------------- XQery -----------------------------------*/
-	//QFile* xmlOutFile = new QFile("Out2.xml");
-	//if (!xmlOutFile->open(QIODevice::WriteOnly))
-	//{
-	//	QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-	//	return -1;
-	//}
-	//
-	//QFile* xqFile = new QFile("input_house.xq");
-	//if (!xqFile->open(QIODevice::ReadOnly))
-	//{
-	//	QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-	//	return -1;
-	//}
-	//QString strQuery = xqFile->readAll();
-	//
-	//QXmlQuery query;
-	//query.bindVariable("inputDocument", xmlFile);
-	//query.setQuery(strQuery);
-	//query.setQuery("doc('Out.xml')/Houses/House[@HOUSENUM = \"7\"]");
-	//query.setQuery("doc('Out.xml')/Houses");
-	//query.setQuery("doc('avtransport.xml')");
-	//if (!query.isValid()) {
-	//	qDebug() << "Query is invalid!";
-	//	return 0;
-	//}
-	//
-	//QXmlSerializer serializer(query, xmlOutFile);
-	//if (!query.evaluateTo(&serializer)) {
-	//	qDebug() << "Can't evaluate the query!";
-	//	return 0;
-	//}
-	//if (!query.evaluateTo(&strOutput)) {
-	//	qDebug() << "Can't evaluate the query!";
-	//	return 0;
-	//}
-//}
-
 void  XmlAddressParse::parseXml()
 {
 	//QtConcurrent::run(this, &QtGuiApplication1::foo);
@@ -731,9 +372,7 @@ void  XmlAddressParse::parseXml()
     QFile* dataOutFile = new QFile(rootPath + "addresses.txt");
     if (!dataOutFile->open(QIODevice::WriteOnly))
     {
-        //QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
         ui.resultsBrowser->append("Can not open file!\n");
-        //return -1;
     }
     QTextStream stream(dataOutFile);
 	if (!results.empty()) {
@@ -745,8 +384,7 @@ void  XmlAddressParse::parseXml()
             ss = ss + " " + str;
             ui.resultsBrowser->append(ss);
 
-
-            stream << "'Москва, " + str + "'\n";
+            stream << "'Санкт-Петербург, " + str + "'\n";
 		}
 	}
 	else
@@ -764,11 +402,8 @@ void  XmlAddressParse::parseXml()
 
 QStringList XmlAddressParse::foo()
 {
-	//ui.resultsBrowser->append("Wait up to 10 minutes");
-	//QString inp = "77";
 	QString re;
 
-	//re = QString("^%1[а-яА-ЯёЁ_]*").arg(inp);
 	QString inp;
 	if (!ui.findHousesEdit->text().isEmpty())
 	{
@@ -782,25 +417,7 @@ QStringList XmlAddressParse::foo()
 
 	QRegExp rx(re);
 
-	QString str1 = "7";
-	QString str2 = "77";
-	QString str3 = "7А";
-	QString str4 = "77А";
-	QString str5 = "77_А";
-	QString str6 = "77/33";
-	QStringList s6 = str3.split("/");
-
-	bool res1 = rx.exactMatch(str1);
-	bool res2 = rx.exactMatch(str2);
-	bool res3 = rx.exactMatch(str3);
-	bool res4 = rx.exactMatch(str4);
-	bool res5 = rx.exactMatch(str5);
-	bool res6 = rx.exactMatch(str6);
-
-	bool res7 = rx.exactMatch(s6.first());
-
-
-    QFile* xmlFile = new QFile(rootPath + "Moscow.xml");
+    QFile* xmlFile = new QFile(rootPath + "Spb.xml");
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
 		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
@@ -823,8 +440,6 @@ QStringList XmlAddressParse::foo()
 	}
 	xmlFile->close();
 
-	//xmlFile = new QFile("houses_small.xml");
-    //xmlFile = new QFile("houses.xml");
     xmlFile = new QFile(rootPath + "PostalHouses.xml");
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
@@ -853,8 +468,8 @@ QStringList XmlAddressParse::foo()
 
 void XmlAddressParse::makeShortHousesAtPostal()
 {
-    QSet<int> postalCodes;
-    postalCodes << /* СВАО */
+    QSet<int> postalCodes_msk;
+    postalCodes_msk << /* СВАО */
                    129164 << 129301 << 129366 << 129626 <<              /* Алексеевский */
                    127349 << 127543 << 127549 << 127560 <<              /* Бибирево */
                    129281 << 129336 << 129345 << 129346 <<              /* Лосиноостровский */
@@ -900,12 +515,60 @@ void XmlAddressParse::makeShortHousesAtPostal()
                    107023 << 107061 << 107076 << 107362 << 107553 <<    /* Преображенское */
                    107065 << 107207 << 107241 << 107497 << 107589;      /* Гольяново */
 
-    QFile* xmlFile = new QFile(rootPath + "houses.xml");
+
+    QSet<int> postalCodes_spb;
+
+    postalCodes_spb << /* Адмиралтейский */
+                   190000 << 190005 << 190013 << 190020 << 190031 <<
+                   190068 << 190098 << 190103 << 190121 << 191002 <<
+                   196084 <<
+                   /* Центральный */
+                   191014 << 191015 << 191023 << 191024 << 191025 <<
+                   191028 << 191036 << 191038 << 191040 << 191060 <<
+                   191119 << 191123 << 191124 << 191144 << 191167 <<
+                   191180 << 191186 << 191187 << 191317 << 192007 <<
+                   /* Кировский */
+                   198035 << 198095 << 198096 << 198097 << 198099 <<
+                   198152 << 198184 << 198188 << 198207 << 198216 <<
+                   198217 << 198255 << 198260 << 198261 << 198262 <<
+                   198302 << 198303 <<
+                   /* Московский */
+                   196006 << 196066 << 196070 << 196105 << 196128 <<
+                   196135 << 196140 << 196143 << 196158 << 196191 <<
+                   196210 << 196211 << 196233 << 196240 << 196244 <<
+                   196247 <<
+                   /* Фрунзенский */
+                   192071 << 192102 << 192212 << 192236 << 192238 <<
+                   192239 << 192241 << 192242 << 192281 << 192283 <<
+                   192284 << 192286 << 192288 << 192289 <<
+                   /* Невский */
+                   192012 << 192019 << 192029 << 192076 << 192131 <<
+                   192148 << 192171 << 192174 << 192177 << 193079 <<
+                   193091 << 193149 << 193168 << 193230 << 193231 <<
+                   193232 << 193312 << 193313 << 193315 << 193318 <<
+                   /* Пушкинский */
+                   196601 << 196602 << 196603 << 196605 << 196606 <<
+                   196607 << 196608 << 196620 << 196621 << 196625 <<
+                   196626 << 196627 << 196631 << 196632 << 196634 <<
+                   196641 << 196642 << 199053 <<
+                   /* Колпинский */
+                   196650 << 196651 << 196652 << 196653 << 196654 <<
+                   196655 << 196657 << 196658 << 196690 <<
+                   /* Прочее */
+                   197046 << 194300 << 195009 << 192159 << 194044 <<
+                   195197 << 195160 << 195176 << 195248 << 195271 <<
+                   195067;
+    QSet<int> pc;
+    pc << 194100 << 194153 << 194044 << 194223 << 194021 << 195251 << 195220 << 195427 << 194156 << 197343 << 197342;
+
+    QSet<int> postalCodes;
+    postalCodes = pc;
+    QFile* xmlFile = new QFile(rootPath + "houses_spb.xml");
     if (!xmlFile->open(QIODevice::ReadOnly))
     {
         QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
     }
-    QFile* xmlOutFile = new QFile(rootPath + "PostalHouses.xml");
+    QFile* xmlOutFile = new QFile(rootPath + "PostalHouses_pc.xml");
     if (!xmlOutFile->open(QIODevice::WriteOnly))
     {
         QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
