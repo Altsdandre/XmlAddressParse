@@ -53,7 +53,7 @@ int XmlAddressParse::findAdd()
 
 	QXmlStreamReader xml(xmlFile);
 
-    QString outFileName = _objectName + "s_" + m_regionCode;
+    QString outFileName = m_objectName + "s_" + m_regionCode;
     QFile* xmlOutFile = new QFile(outFileName + ".xml");
 	if (!xmlOutFile->open(QIODevice::WriteOnly))
 	{
@@ -101,7 +101,7 @@ int XmlAddressParse::findAdd()
 				}
                 if (m_objectName == "House") {
                     if (counter >= 300000) {
-                        static i = 1;
+                        static int i = 1;
                         xmlOutFile->close();
                         xmlOutFile = new QFile(outFileName + "_" + QString::number(++i) + ".xml");
                     }
