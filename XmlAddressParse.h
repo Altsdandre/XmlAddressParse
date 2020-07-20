@@ -22,12 +22,17 @@ private slots:
     
 private:
     QStringList foo();
+    void setFileNames();
 
 private:
     QString m_inputFile;
     QWebEngineView *m_webView;
     QString m_objectName;       // "Object" or "House"
     QString m_regionCode;
+    QString m_housesNumbersFile;
+    QString m_housesNamesFile;
+    QString m_postalHousesNumbersFile;
+    QString m_city;
 
     Ui::XmlAddressParseClass ui;
 };

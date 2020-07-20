@@ -12,6 +12,17 @@
 #include <QMap>
 #include <QTextStream>
 
+/*
+Файл houses_msk.xml содержит номер дома, регион, почтовый индекс и идентификатор дома.
+Файл Moscow.xml содерржит имя дома и идентификатор.
+Идентификаторы дома в файлах совпадают (AOGUID).
+В makeShortHousesAtPostal() задаются индексы районов поиска и формируется PostalHouses.xml на основе houses_msk.xml.
+    В foo() формируется список найденных адресов: в houses_msk.xml ищутся идентификаторы всех домов с искомым номером,
+    по этому идентификатору формируется адрес дома из Moscow.xml.
+    Далее к списку адресов добавляется город и сохраняется в файл addresses.txt.
+    Список адресов из addresses.txt подхватывает js скрипт при обновлении окна браузера приложения (QWebEngineView).
+*/
+
 //const QString rootPath = "/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/";
 QString rootPath;
 
@@ -21,6 +32,13 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
     ui.setupUi(this);
 
     rootPath = QCoreApplication::applicationDirPath() + "/";
+
+    if (ui.mskButton->isChecked())
+        m_city = "msk";
+    else
+        m_city = "spb";
+
+    setFileNames();
 
     m_webView = new QWebEngineView(this);
     ui.mapScroll->setWidget(m_webView);
@@ -34,6 +52,22 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
     connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(makeShortHousesAtPostal()));
 
 	connect(ui.findHousesButton, SIGNAL(clicked()), this, SLOT(parseXml()));
+
+    connect(ui.mskButton, &QRadioButton::toggled, this, [=](bool state){
+        if (state) m_city = "msk";
+        setFileNames();
+    });
+    connect(ui.spbButton, &QRadioButton::toggled, this, [=](bool state){
+        if (state) m_city = "spb";
+        setFileNames();
+    });
+}
+
+void XmlAddressParse::setFileNames()
+{
+    m_housesNamesFile   = rootPath + "all_houses_names_"   + m_city + ".xml";
+    m_housesNumbersFile = rootPath + "all_houses_numbers_" + m_city + ".xml";
+    m_postalHousesNumbersFile = rootPath + "postal_houses_numbers_" + m_city + ".xml";
 }
 
 void XmlAddressParse::openXml()
@@ -47,7 +81,7 @@ int XmlAddressParse::findAdd()
     QFile* xmlFile = new QFile(m_inputFile);
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
-		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_inputFile, QMessageBox::Ok);
 		return -1;
 	}
 
@@ -57,7 +91,7 @@ int XmlAddressParse::findAdd()
     QFile* xmlOutFile = new QFile(outFileName + ".xml");
 	if (!xmlOutFile->open(QIODevice::WriteOnly))
 	{
-		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + outFileName + ".xml", QMessageBox::Ok);
 		return -1;
 	}
 
@@ -135,10 +169,10 @@ int XmlAddressParse::findAdd()
 
 int XmlAddressParse::findXQuery()
 {
-    QFile* moscowFile = new QFile(rootPath + "Moscow.xml");
+    QFile* moscowFile = new QFile(m_housesNamesFile);
 	if (!moscowFile->open(QIODevice::ReadOnly))
 	{
-		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_housesNamesFile, QMessageBox::Ok);
 		return -1;
 	}
 
@@ -147,7 +181,7 @@ int XmlAddressParse::findXQuery()
     QFile* mySocrFile = new QFile(rootPath + "shortNames.txt");
     if (!mySocrFile->open(QIODevice::ReadOnly))
     {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + rootPath + "shortNames.txt", QMessageBox::Ok);
         return -1;
     }
     QSet<QString> mySosr;
@@ -157,17 +191,18 @@ int XmlAddressParse::findXQuery()
     }
     mySocrFile->close();
     //создать новый москоу.иксмл
-    QFile* moscowNew = new QFile(rootPath + "MoscowNew.xml");
+    QString fileName1 = rootPath + "all_houses_names_" + m_city + "New.xml";
+    QFile* moscowNew = new QFile(fileName1);
     if (!moscowNew->open(QIODevice::WriteOnly))
     {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + fileName1, QMessageBox::Ok);
         return -1;
     }
     //xml.setDevice(xmlFile);
     QXmlStreamWriter moscowNewXml(moscowNew);
     moscowNewXml.setAutoFormatting(true);
     QSet<QString> objects_id_new;
-    //заполнение QSet. парсинг Moscow.xml.
+    //заполнение QSet. парсинг all_houses_names_.xml.
     bool has2 = false;
 
     while (!xml.atEnd() && !xml.hasError())
@@ -231,7 +266,7 @@ int XmlAddressParse::findXQuery()
 
 //==============================================================================================
     QSet<QString> shortNames;
-    //заполнение QSet. парсинг Moscow.xml.
+    //заполнение QSet. парсинг all_houses_names_.xml.
     while (!xml.atEnd() && !xml.hasError())
     {
         if (xml.readNext() == QXmlStreamReader::StartElement)
@@ -253,8 +288,8 @@ int XmlAddressParse::findXQuery()
     QFile* dataOutFile = new QFile(rootPath + "shortNames.txt");
     if (!dataOutFile->open(QIODevice::WriteOnly))
     {
-        //QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
-        ui.resultsBrowser->append("Can not open file!\n");
+        //QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + rootPath + "shortNames.txt", QMessageBox::Ok);
+        ui.resultsBrowser->append("Can not open file!" + rootPath + "shortNames.txt\n");
         //return -1;
     }
     QList<QString> nameslist = shortNames.toList();
@@ -267,7 +302,7 @@ int XmlAddressParse::findXQuery()
     dataOutFile->close();
 //==============================================================================================
 	QSet<QString> objects_id;
-	//заполнение QSet. парсинг Moscow.xml.
+    //заполнение QSet. парсинг all_houses_names_.xml.
 	while (!xml.atEnd() && !xml.hasError())
 	{
 		if (xml.readNext() == QXmlStreamReader::StartElement)
@@ -286,13 +321,13 @@ int XmlAddressParse::findXQuery()
 		}
 
 	}
-	ui.resultsBrowser->append("Parse Moscow.xml done");
+    ui.resultsBrowser->append("Parse all_houses_names_.xml done");
 
 	//Создание xml с домами для Москвы
-	QFile* xmlOutFile = new QFile("houses.xml");
+    QFile* xmlOutFile = new QFile(m_housesNumbersFile);
 	if (!xmlOutFile->open(QIODevice::WriteOnly))
 	{
-		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_housesNumbersFile, QMessageBox::Ok);
 		return -1;
 	}
 
@@ -302,7 +337,7 @@ int XmlAddressParse::findXQuery()
 	QFile* xmlFile = new QFile(m_inputFile);
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
-		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_inputFile, QMessageBox::Ok);
 		return -1;
 	}
 
@@ -372,7 +407,7 @@ void  XmlAddressParse::parseXml()
     QFile* dataOutFile = new QFile(rootPath + "addresses.txt");
     if (!dataOutFile->open(QIODevice::WriteOnly))
     {
-        ui.resultsBrowser->append("Can not open file!\n");
+        ui.resultsBrowser->append("Can not open file!\n" + rootPath + "addresses.txt");
     }
     QTextStream stream(dataOutFile);
 	if (!results.empty()) {
@@ -384,7 +419,10 @@ void  XmlAddressParse::parseXml()
             ss = ss + " " + str;
             ui.resultsBrowser->append(ss);
 
-            stream << "'Санкт-Петербург, " + str + "'\n";
+            if (ui.mskButton->isChecked())
+                stream << "'Москва, " + str + "'\n";
+            else stream << "'Санкт-Петербург, " + str + "'\n";
+
 		}
 	}
 	else
@@ -417,10 +455,10 @@ QStringList XmlAddressParse::foo()
 
 	QRegExp rx(re);
 
-    QFile* xmlFile = new QFile(rootPath + "Spb.xml");
+    QFile* xmlFile = new QFile(m_housesNamesFile);
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
-		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_housesNamesFile, QMessageBox::Ok);
 		return QStringList();
 	}
 	QXmlStreamReader xml(xmlFile);
@@ -440,10 +478,19 @@ QStringList XmlAddressParse::foo()
 	}
 	xmlFile->close();
 
-    xmlFile = new QFile(rootPath + "PostalHouses.xml");
+    //Выбираем, где искать дома во всем городе или в заданном (по индексам) районе
+    QString areaFileName;
+    if (ui.districtButton->isChecked()) {
+        areaFileName = m_postalHousesNumbersFile;
+    } else {
+        areaFileName = m_housesNumbersFile;
+    }
+
+    //Открываем файл с номерами домов
+    xmlFile = new QFile(areaFileName);
 	if (!xmlFile->open(QIODevice::ReadOnly))
 	{
-		QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + areaFileName, QMessageBox::Ok);
 		return QStringList();
 	}
 	xml.setDevice(xmlFile);
@@ -516,6 +563,27 @@ void XmlAddressParse::makeShortHousesAtPostal()
                    107065 << 107207 << 107241 << 107497 << 107589;      /* Гольяново */
 
 
+    QSet<int> postalCodes_msk_2020;
+        postalCodes_msk_2020 << /* ЮВАО */
+                           109145 << 109153 << 109156 << 109507 << 109431 << /* Выхино-Жулебино */
+                           109542 << 109444 << 109472 <<
+                           111020 << 111024 << 111033 << 111116 << 111250 << /* Лефортово */
+                           111674 <<                                         /* Некрасовка */
+                           109377 << 109428 << 109456 << 109457 <<           /* Рязанский */
+                           109429 << 109649 <<                               /* Капотня */
+                           109380 << 109382 << 109386 << 109387 << 109559 << /* Люблино */
+                           109052 << 109202 << 109391 <<                     /* Нижегородский */
+                           109125 << 109129 << 109263 << 109390 << 109518 << /* Текстильщики */
+                           109387 << 109548 <<
+                           109117 << 109378 << 109439 << 109443 << 109457 << /* Кузьминки */
+                           109462 <<
+                           109144 << 109341 << 109369 << 109451 << 109469 << /* Марьино */
+                           109651 << 109652 <<
+                           109235 << 109383 << 109388 << 109548 <<           /* Печаники */
+                           115088 << 115432 << 109193;                       /* Южнопортовый */
+                           /* ЮАО */
+
+
     QSet<int> postalCodes_spb;
 
     postalCodes_spb << /* Адмиралтейский */
@@ -562,16 +630,18 @@ void XmlAddressParse::makeShortHousesAtPostal()
     pc << 194100 << 194153 << 194044 << 194223 << 194021 << 195251 << 195220 << 195427 << 194156 << 197343 << 197342;
 
     QSet<int> postalCodes;
-    postalCodes = pc;
-    QFile* xmlFile = new QFile(rootPath + "houses_spb.xml");
+    postalCodes = postalCodes_msk_2020;
+
+    QFile* xmlFile = new QFile(m_housesNumbersFile);
     if (!xmlFile->open(QIODevice::ReadOnly))
     {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_housesNumbersFile, QMessageBox::Ok);
     }
-    QFile* xmlOutFile = new QFile(rootPath + "PostalHouses_pc.xml");
+
+    QFile* xmlOutFile = new QFile(m_postalHousesNumbersFile);
     if (!xmlOutFile->open(QIODevice::WriteOnly))
     {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_postalHousesNumbersFile, QMessageBox::Ok);
     }
     QXmlStreamReader xml(xmlFile);
 

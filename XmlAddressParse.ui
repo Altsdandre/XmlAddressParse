@@ -30,7 +30,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="mainTab">
        <attribute name="title">
@@ -87,7 +87,7 @@
               <item>
                <widget class="QLineEdit" name="findHousesEdit">
                 <property name="text">
-                 <string>0</string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -189,6 +189,76 @@
         <property name="text">
          <string>Set xml file</string>
         </property>
+       </widget>
+       <widget class="QGroupBox" name="cityBox">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>130</y>
+          <width>129</width>
+          <height>82</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>City</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <property name="verticalSpacing">
+          <number>20</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QRadioButton" name="mskButton">
+           <property name="text">
+            <string>Msk</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QRadioButton" name="spbButton">
+           <property name="text">
+            <string>Spb</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QGroupBox" name="areaBox">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>230</y>
+          <width>129</width>
+          <height>82</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Area</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <property name="verticalSpacing">
+          <number>20</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QRadioButton" name="cityButton">
+           <property name="text">
+            <string>City</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QRadioButton" name="districtButton">
+           <property name="text">
+            <string>District</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </widget>
      </widget>
