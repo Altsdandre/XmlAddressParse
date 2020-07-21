@@ -19,9 +19,12 @@ private slots:
 	int  findXQuery();
 	void  parseXml();
     void makeShortHousesAtPostal();
+
+protected:
+    void keyPressEvent(QKeyEvent *event);
     
 private:
-    QStringList foo();
+    QStringList formAddressList();
     void setFileNames();
 
 private:
@@ -29,6 +32,7 @@ private:
     QWebEngineView *m_webView;
     QString m_objectName;       // "Object" or "House"
     QString m_regionCode;
+    QString m_rootPath;
     QString m_housesNumbersFile;
     QString m_housesNamesFile;
     QString m_postalHousesNumbersFile;

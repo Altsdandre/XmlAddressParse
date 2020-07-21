@@ -13,25 +13,31 @@
 #include <QTextStream>
 
 /*
-Файл houses_msk.xml содержит номер дома, регион, почтовый индекс и идентификатор дома.
-Файл Moscow.xml содерржит имя дома и идентификатор.
+TODO:
+    1. Добавить счетчик запросов к Яндексу за день.
+*/
+
+/*
+Файл all_houses_numbers_<city>.xml содержит номер дома, регион, почтовый индекс и идентификатор дома.
+Файл all_houses_names_<city>.xml содерржит имя дома и идентификатор.
 Идентификаторы дома в файлах совпадают (AOGUID).
-В makeShortHousesAtPostal() задаются индексы районов поиска и формируется PostalHouses.xml на основе houses_msk.xml.
-    В foo() формируется список найденных адресов: в houses_msk.xml ищутся идентификаторы всех домов с искомым номером,
-    по этому идентификатору формируется адрес дома из Moscow.xml.
+В makeShortHousesAtPostal() задаются индексы районов поиска
+    и формируется postal_houses_numbers_<city>.xml на основе all_houses_numbers_<city>.xml.
+    В formAddressList() формируется список найденных адресов:
+    в postal_houses_numbers_<city>.xml или all_houses_numbers_<city>.xml
+    ищутся идентификаторы всех домов с искомым номером,
+    по этому идентификатору формируется адрес дома из all_houses_names_<city>.xml.
     Далее к списку адресов добавляется город и сохраняется в файл addresses.txt.
     Список адресов из addresses.txt подхватывает js скрипт при обновлении окна браузера приложения (QWebEngineView).
 */
-
-//const QString rootPath = "/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/";
-QString rootPath;
 
 XmlAddressParse::XmlAddressParse(QWidget *parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
 
-    rootPath = QCoreApplication::applicationDirPath() + "/";
+    //m_rootPath = "/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/";
+    m_rootPath = QCoreApplication::applicationDirPath() + "/";
 
     if (ui.mskButton->isChecked())
         m_city = "msk";
@@ -40,9 +46,18 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
 
     setFileNames();
 
+    //Удалим файл со списком адресов, чтобы они не отображались на карте при запуске
+    QString filename = m_rootPath + "addresses.txt";
+    QFile file(filename);
+    if (file.open(QIODevice::ReadWrite)) {
+        if (!file.remove()) {
+            file.close();
+        }
+    }
+
     m_webView = new QWebEngineView(this);
     ui.mapScroll->setWidget(m_webView);
-    m_webView->load(QUrl::fromLocalFile(rootPath + "ya_page.html"));
+    m_webView->load(QUrl::fromLocalFile(m_rootPath + "ya_page.html"));
 
     m_inputFile = ui.openEdit->text();
 
@@ -65,9 +80,9 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
 
 void XmlAddressParse::setFileNames()
 {
-    m_housesNamesFile   = rootPath + "all_houses_names_"   + m_city + ".xml";
-    m_housesNumbersFile = rootPath + "all_houses_numbers_" + m_city + ".xml";
-    m_postalHousesNumbersFile = rootPath + "postal_houses_numbers_" + m_city + ".xml";
+    m_housesNamesFile   = m_rootPath + "all_houses_names_"   + m_city + ".xml";
+    m_housesNumbersFile = m_rootPath + "all_houses_numbers_" + m_city + ".xml";
+    m_postalHousesNumbersFile = m_rootPath + "postal_houses_numbers_" + m_city + ".xml";
 }
 
 void XmlAddressParse::openXml()
@@ -178,10 +193,10 @@ int XmlAddressParse::findXQuery()
 
 	QXmlStreamReader xml(moscowFile);
 //==============================================================================================
-    QFile* mySocrFile = new QFile(rootPath + "shortNames.txt");
+    QFile* mySocrFile = new QFile(m_rootPath + "shortNames.txt");
     if (!mySocrFile->open(QIODevice::ReadOnly))
     {
-        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + rootPath + "shortNames.txt", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_rootPath + "shortNames.txt", QMessageBox::Ok);
         return -1;
     }
     QSet<QString> mySosr;
@@ -191,7 +206,7 @@ int XmlAddressParse::findXQuery()
     }
     mySocrFile->close();
     //создать новый москоу.иксмл
-    QString fileName1 = rootPath + "all_houses_names_" + m_city + "New.xml";
+    QString fileName1 = m_rootPath + "all_houses_names_" + m_city + "New.xml";
     QFile* moscowNew = new QFile(fileName1);
     if (!moscowNew->open(QIODevice::WriteOnly))
     {
@@ -285,11 +300,11 @@ int XmlAddressParse::findXQuery()
         }
 
     }
-    QFile* dataOutFile = new QFile(rootPath + "shortNames.txt");
+    QFile* dataOutFile = new QFile(m_rootPath + "shortNames.txt");
     if (!dataOutFile->open(QIODevice::WriteOnly))
     {
-        //QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + rootPath + "shortNames.txt", QMessageBox::Ok);
-        ui.resultsBrowser->append("Can not open file!" + rootPath + "shortNames.txt\n");
+        //QMessageBox::warning(nullptr, "Warning", "Can not open file!\n" + m_rootPath + "shortNames.txt", QMessageBox::Ok);
+        ui.resultsBrowser->append("Can not open file!" + m_rootPath + "shortNames.txt\n");
         //return -1;
     }
     QList<QString> nameslist = shortNames.toList();
@@ -401,13 +416,13 @@ void  XmlAddressParse::parseXml()
 	//QtConcurrent::run(this, &QtGuiApplication1::foo);
 	ui.resultsBrowser->append("Wait up to 10 minutes\n");
 	qApp->processEvents();
-	QStringList results = foo();
+    QStringList results = formAddressList();
     int i = 0;
 
-    QFile* dataOutFile = new QFile(rootPath + "addresses.txt");
+    QFile* dataOutFile = new QFile(m_rootPath + "addresses.txt");
     if (!dataOutFile->open(QIODevice::WriteOnly))
     {
-        ui.resultsBrowser->append("Can not open file!\n" + rootPath + "addresses.txt");
+        ui.resultsBrowser->append("Can not open file!\n" + m_rootPath + "addresses.txt");
     }
     QTextStream stream(dataOutFile);
 	if (!results.empty()) {
@@ -420,9 +435,11 @@ void  XmlAddressParse::parseXml()
             ui.resultsBrowser->append(ss);
 
             if (ui.mskButton->isChecked())
-                stream << "'Москва, " + str + "'\n";
-            else stream << "'Санкт-Петербург, " + str + "'\n";
-
+                stream << "'Москва, " + str + "'";
+            else
+                stream << "'Санкт-Петербург, " + str + "'";
+            if (i != results.count())
+                stream << "\n";
 		}
 	}
 	else
@@ -433,12 +450,19 @@ void  XmlAddressParse::parseXml()
     dataOutFile->close();
 
     if (!results.empty()) {
+        //Если найденных адресов больше 700, выдать вопрос: отображать ли на карте?
+        if(results.count() > 700) {
+            auto result = QMessageBox::question(this, "Overlong list", "There are too many points!\nShow it anyway?",
+                                                QMessageBox::Yes|QMessageBox::No);
+            if (result == QMessageBox::No) {
+                return;
+            }
+        }
         m_webView->reload();
     }
-
 }
 
-QStringList XmlAddressParse::foo()
+QStringList XmlAddressParse::formAddressList()
 {
 	QString re;
 
@@ -451,7 +475,7 @@ QStringList XmlAddressParse::foo()
 	{
 		return QStringList();
 	}
-	re = QString("^%1[а-яА-ЯёЁ_]*").arg(inp);
+    re = QString("^%1[а-яА-ЯёЁ_]*").arg(inp); //Ищутся адреса: 23, 45А, 31_а, 74к2, 1с1. Не найдутся: 34к7с2
 
 	QRegExp rx(re);
 
@@ -660,8 +684,10 @@ void XmlAddressParse::makeShortHousesAtPostal()
         {
         case QXmlStreamReader::StartDocument:
             xmlOut.writeStartDocument();
+            xmlOut.writeStartElement("Houses");  //<Houses>
             break;
         case QXmlStreamReader::EndDocument:
+            xmlOut.writeEndElement();  // </Houses>
             xmlOut.writeEndDocument();
             break;
         case QXmlStreamReader::StartElement:
@@ -685,6 +711,7 @@ void XmlAddressParse::makeShortHousesAtPostal()
             if (has)
             {
                 xmlOut.writeEndElement();
+                has = false;
             }
             break;
         case QXmlStreamReader::Characters:
@@ -697,4 +724,13 @@ void XmlAddressParse::makeShortHousesAtPostal()
 
     xmlFile->close();
     xmlOutFile->close();
+    ui.openEdit->setText("done");
+}
+
+void XmlAddressParse::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Return) {
+        parseXml();
+    }
+    QMainWindow::keyPressEvent(event);
 }

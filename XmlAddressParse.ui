@@ -30,7 +30,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="mainTab">
        <attribute name="title">
@@ -84,6 +84,9 @@
             </property>
             <item row="0" column="0">
              <layout class="QHBoxLayout" name="horizontalLayout">
+              <property name="leftMargin">
+               <number>2</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="findHousesEdit">
                 <property name="text">
@@ -267,6 +270,21 @@
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>findHousesEdit</tabstop>
+  <tabstop>dataScroll</tabstop>
+  <tabstop>findHousesButton</tabstop>
+  <tabstop>mapScroll</tabstop>
+  <tabstop>resultsBrowser</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>openButton</tabstop>
+  <tabstop>openEdit</tabstop>
+  <tabstop>mskButton</tabstop>
+  <tabstop>spbButton</tabstop>
+  <tabstop>cityButton</tabstop>
+  <tabstop>districtButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
