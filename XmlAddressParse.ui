@@ -103,7 +103,7 @@
               </item>
              </layout>
             </item>
-            <item row="1" column="0">
+            <item row="2" column="0">
              <widget class="QTextBrowser" name="resultsBrowser">
               <property name="maximumSize">
                <size>
@@ -199,7 +199,7 @@
           <x>30</x>
           <y>130</y>
           <width>129</width>
-          <height>82</height>
+          <height>91</height>
          </rect>
         </property>
         <property name="title">
@@ -232,9 +232,9 @@
         <property name="geometry">
          <rect>
           <x>30</x>
-          <y>230</y>
+          <y>250</y>
           <width>129</width>
-          <height>82</height>
+          <height>91</height>
          </rect>
         </property>
         <property name="title">
@@ -263,6 +263,35 @@
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="horizontalLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>350</y>
+          <width>171</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="requestsLabel">
+           <property name="text">
+            <string>Requests Today:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="requestsNumber">
+           <property name="text">
+            <string>no</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -271,7 +300,6 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
-  <tabstop>tabWidget</tabstop>
   <tabstop>findHousesEdit</tabstop>
   <tabstop>dataScroll</tabstop>
   <tabstop>findHousesButton</tabstop>

@@ -13,11 +13,6 @@
 #include <QTextStream>
 
 /*
-TODO:
-    1. Добавить счетчик запросов к Яндексу за день.
-*/
-
-/*
 Файл all_houses_numbers_<city>.xml содержит номер дома, регион, почтовый индекс и идентификатор дома.
 Файл all_houses_names_<city>.xml содерржит имя дома и идентификатор.
 Идентификаторы дома в файлах совпадают (AOGUID).
@@ -32,9 +27,22 @@ TODO:
 */
 
 XmlAddressParse::XmlAddressParse(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent),
+      m_settings("HomeCorp", "HouseFinder")
 {
     ui.setupUi(this);
+
+    //Загрузим информацию по запросам: сколько и когда последний раз делались.
+    //(Нам интересно количество запросов в день: у Яндекса ограничение - 10000)
+    m_requestsToday = m_settings.value("requests").toInt();
+    m_requestsDate  = m_settings.value("date").toDate();
+    //Если запрос был не сегодня, отобразим ноль
+    //Счетчик при этом не обнуляется - если запросов не будет, то сохранится старое значение счетчика.
+    if (m_requestsDate != QDate::currentDate()) {
+        ui.requestsNumber->setText(QString::number(0));
+    } else {
+        ui.requestsNumber->setText(QString::number(m_requestsToday));
+    }
 
     //m_rootPath = "/Users/dmitriy/Projects/QtProjects/XmlAddressParse/XmlAddressParse/";
     m_rootPath = QCoreApplication::applicationDirPath() + "/";
@@ -76,6 +84,12 @@ XmlAddressParse::XmlAddressParse(QWidget *parent)
         if (state) m_city = "spb";
         setFileNames();
     });
+}
+
+XmlAddressParse::~XmlAddressParse()
+{
+    m_settings.setValue("requests", m_requestsToday);
+    m_settings.setValue("date",     m_requestsDate);
 }
 
 void XmlAddressParse::setFileNames()
@@ -458,6 +472,15 @@ void  XmlAddressParse::parseXml()
                 return;
             }
         }
+        //Если дата не совпадает, значит, прошлый запрос был в другой день,
+        // и подсчет нужно начинать заново.
+        if (m_requestsDate != QDate::currentDate()) {
+            m_requestsToday = 0;
+            m_requestsDate = QDate::currentDate();
+        }
+        m_requestsToday += results.count();
+        ui.requestsNumber->setText(QString::number(m_requestsToday));
+        //Перезагружаем страницу, чтобы отобразить новые адреса из addresses.txt.
         m_webView->reload();
     }
 }

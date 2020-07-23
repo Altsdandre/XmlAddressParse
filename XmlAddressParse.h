@@ -12,6 +12,7 @@ class XmlAddressParse : public QMainWindow
 
 public:
     XmlAddressParse(QWidget *parent = Q_NULLPTR);
+    ~XmlAddressParse();
 
 private slots:
     void openXml();
@@ -37,6 +38,10 @@ private:
     QString m_housesNamesFile;
     QString m_postalHousesNumbersFile;
     QString m_city;
+    QSettings m_settings;
+    int m_requestsToday;
+    QDate m_requestsDate;
+
 
     Ui::XmlAddressParseClass ui;
 };
